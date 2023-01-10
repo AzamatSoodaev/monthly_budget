@@ -8,11 +8,11 @@ async function createTransaction(request, response) {
 	const { amount, description, categoryId, currencyId } = request.body;
 
 	try {
-		const results = await pool.query(
+		const result = await pool.query(
 			"INSERT INTO txn (amount, description, category_id, currency_id) VALUES ($1, $2, $3, $4) RETURNING id",
 			[amount, description, categoryId, currencyId]
 		);
-		response.status(201).send(`Transaction added with ID: ${results.rows[0].id}`);
+		response.status(201).send(`Transaction added with ID: ${result.rows[0].id}`);
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();
@@ -51,11 +51,11 @@ async function deleteTransactionById(request, response) {
 	const { id } = request.params;
 
 	try {
-		const results = await pool.query(
+		const result = await pool.query(
 			"DELETE FROM txn WHERE id = $1 RETURNING id",
 			[id]
 		);
-		response.status(200).send(`Transaction deleted with ID: ${results.rows[0].id}`);
+		response.status(200).send(`Transaction deleted with ID: ${result.rows[0]?.id || id}`);
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();

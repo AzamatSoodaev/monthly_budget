@@ -1,5 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const { body, param } = require('express-validator');
+const { validationResult } = require('express-validator');
 const {
 	createTransaction,
 	getTransactions,
@@ -10,7 +12,7 @@ const {
 	getCustomerData,
 	createTxnCategories,
 	updateTxnCategoryById,
-	deleteTxnCategories,
+	deleteTxnCategoryById,
 } = require('./src/transactionCategories');
 
 const app = express();
@@ -23,17 +25,54 @@ app.use(
 	})
 );
 
-// TODO: validate inputs
-app.post('/transactions', createTransaction);
+app.post(
+	'/transactions',
+	body('amount').isNumeric(),
+	body('description').isString().isLength(),
+	body('categoryId').isInt(),
+	body('currencyId').isInt(),
+	validationErrorHandler,
+	createTransaction
+);
 app.get('/transactions', getTransactions);
-app.delete('/transactions/:id', deleteTransactionById);
+app.delete(
+	'/transactions/:id',
+	param('id').isInt(),
+	validationErrorHandler,
+	deleteTransactionById
+);
 
-app.post('/transactions/category', createTxnCategories);
-app.put('/transactions/category', updateTxnCategoryById);
-app.delete('/transactions/category', deleteTxnCategories);
+app.post(
+	'/transactions/category',
+	body('name').isString(),
+	validationErrorHandler,
+	createTxnCategories
+);
+app.put(
+	'/transactions/category/:id',
+	param('id').isInt(),
+	body('name').isString(),
+	validationErrorHandler,
+	updateTxnCategoryById
+);
+app.delete(
+	'/transactions/category/:id',
+	param('id').isInt(),
+	validationErrorHandler,
+	deleteTxnCategoryById
+);
 
 app.get('/customerData', getCustomerData);
 
 app.listen(port, () => {
 	console.log(`App running on port ${port}.`);
 });
+
+function validationErrorHandler(request, response, next) {
+	const errors = validationResult(request);
+	if (!errors.isEmpty()) {
+		return response.status(400).json({ errors: errors.array() });
+	} else {
+		next();
+	}
+}

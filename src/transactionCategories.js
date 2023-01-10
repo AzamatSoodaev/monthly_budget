@@ -7,11 +7,11 @@ async function getTxnCategories() {
 	console.log("Fun: getTxnCategories");
 
 	try {
-		const results = await pool.query(
+		const result = await pool.query(
 			"SELECT id, name FROM txn_category",
 			[]
 		);
-		return results.rows;
+		return result.rows;
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();
@@ -21,29 +21,31 @@ async function getTxnCategories() {
 async function createTxnCategories(request, response) {
 	console.log("Fun: createTxnCategories");
 
+	const { name } = request.body;
+
 	try {
-		const { name } = request.body;
-		const results = await pool.query(
+		const result = await pool.query(
 			"INSERT INTO txn_category (name) VALUES ($1) RETURNING id",
 			[name]
 		);
-		response.status(201).send(`Transaction category added with ID: ${results.rows[0].id}`);
+		response.status(201).send(`Transaction category added with ID: ${result.rows[0].id}`);
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();
 	}
 }
 
-async function deleteTxnCategories(request, response) {
-	console.log("Fun: deleteTxnCategories");
+async function deleteTxnCategoryById(request, response) {
+	console.log("Fun: deleteTxnCategoryById");
+
+	const { id } = request.params;
 
 	try {
-		const { ids } = request.body;
-		const results = await pool.query(
-			pgFormat("DELETE FROM txn_category WHERE id IN ($1) RETURNING id", ids),
-			[ids]
+		const result = await pool.query(
+			pgFormat("DELETE FROM txn_category WHERE id = $1 RETURNING id", id),
+			[id]
 		);
-		response.status(200).send(`Transactions category deleted with ID: ${JSON.stringify(results.rows)}`);
+		response.status(200).send(`Transactions category deleted with ID: ${JSON.stringify(result.rows[0]?.id || id)}`);
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();
@@ -53,13 +55,15 @@ async function deleteTxnCategories(request, response) {
 async function updateTxnCategoryById(request, response) {
 	console.log("Fun: updateTxnCategoryById");
 
+	const { id } = request.params;
+	const { name } = request.body;
+
 	try {
-		const { id, name } = request.body;
-		const results = await pool.query(
-			"UPDATE txn_category SET name = $1 WHERE id = $2",
+		const result = await pool.query(
+			"UPDATE txn_category SET name = $2 WHERE id = $1",
 			[id, name]
 		);
-		response.status(200).send(`Transactions updated with ID: ${JSON.stringify(results.rows)}`);
+		response.status(200).send(`Transactions updated with ID: ${JSON.stringify(result.rows[0]?.id || id)}`);
 	} catch (error) {
 		console.log(error);
 		response.status(500).send();
@@ -85,6 +89,6 @@ async function getCustomerData(request, response) {
 module.exports = {
 	getCustomerData,
 	createTxnCategories,
-	deleteTxnCategories,
+	deleteTxnCategoryById,
 	updateTxnCategoryById,
 };
