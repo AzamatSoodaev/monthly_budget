@@ -1,4 +1,3 @@
-const pgFormat = require("pg-format");
 const pool = require('./db');
 const { getCurrencies } = require('./currencies');
 
@@ -42,7 +41,7 @@ async function deleteTxnCategoryById(request, response) {
 
 	try {
 		const result = await pool.query(
-			pgFormat("DELETE FROM txn_category WHERE id = $1 RETURNING id", id),
+			"DELETE FROM txn_category WHERE id = $1 RETURNING id",
 			[id]
 		);
 		response.status(200).send(`Transactions category deleted with ID: ${JSON.stringify(result.rows[0]?.id || id)}`);
